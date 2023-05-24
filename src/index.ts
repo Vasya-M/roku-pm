@@ -74,7 +74,7 @@ export class RokuPmPlugin implements CompilerPlugin {
             "logAnonFunc": true,
             "addImports": [], // example: ["pkg:/source/someFile.brs"]
             "addFiles": [], // example: [{uri:"pkg:/source/someFile.brs", "file": "sub helloWorld \n ?\"hello world\" \n end sub"}]
-            "files": ["**/*.*"]
+            "files": ["**/*.*"] // to ignore some files/folders, add '!' to glob pattern "!some/folder/**"
         };
         return config;
     }
