@@ -1,0 +1,32 @@
+{
+  "name": "roku-pm",
+  "version": "1.0.0",
+  "description": "allow to log all funciton calls(and more, soon) in roku project",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^14.6.0",
+	"fs-extra": "^9.1.0",
+    "micromatch": "^4.0.5",
+    "node-fetch": "2.6.1",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
+    "brighterscript": "^0.65.0",
+    "eslint": "^7.7.0",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.9.4"
+  },
+  "keywords": [
+    "roku",
+    "bsc",
+    "brighterscript",
+    "brightscript",
+    "scenegraph",
+    "britherscript"
+  ],
+  "author": "Vasyl Martynych",
+  "license": "ISC"
+}

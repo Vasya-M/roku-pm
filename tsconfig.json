@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "noImplicitAny": false,
+      "target": "ES2017",
+      "module": "commonjs",
+      "sourceMap": true,
+      "rootDir": "src",
+      "outDir": "dist",
+      "strict": false,
+      "strictNullChecks": false,
+      "allowSyntheticDefaultImports": true,
+      "lib": [
+        "es2017",
+        "es2019.array"
+      ]
+    },
+    "include": [
+      "src/**/*.ts"
+    ],
+    "exclude": [
+      "node_modules/**/*"
+    ],
+    "ts-node": {
+      "transpileOnly": true
+    }
+  }
