@@ -58,7 +58,6 @@ export class RokuPmPlugin implements CompilerPlugin {
                     if (this.config.logAnonFunc != true) { continue }
                     let parent = func.parent
                     let subName = ""
-                    console.log("annon func name "+parent?.constructor.name)
                     if (isAAMemberExpression(parent)) {
                         subName = parent.keyToken.text.replaceAll('"',"")
                     } else if (isAssignmentStatement(parent)){
