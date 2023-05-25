@@ -1,4 +1,4 @@
-import { CompilerPlugin, ProgramBuilder, ExpressionStatement,isCallExpression,isExpressionStatement, FunctionExpression,XmlFile, Program, BeforeFileTranspileEvent, isNamespaceStatement, isFunctionStatement, isFunctionType, isBrsFile, WalkMode, createVisitor, Parser, TokenKind, Body, NewExpression, ParseMode, isXmlFile, Position, CallExpression } from 'brighterscript';
+import { CompilerPlugin, ProgramBuilder, ExpressionStatement,isAAMemberExpression,isAssignmentStatement, isCallExpression,isExpressionStatement, FunctionExpression,XmlFile, Program, BeforeFileTranspileEvent, isNamespaceStatement, isFunctionStatement, isFunctionType, isBrsFile, WalkMode, createVisitor, Parser, TokenKind, Body, NewExpression, ParseMode, isXmlFile, Position, CallExpression } from 'brighterscript';
 import { SGScript } from 'brighterscript/dist/parser/SGTypes';
 import * as micromatch from 'micromatch';
 
@@ -7,12 +7,14 @@ export class RokuPmPlugin implements CompilerPlugin {
 
     public name = 'roku-pm';
     public config;
+    
+    private isCustomFuncLogDefined = false;
 
     beforeProgramCreate(builder: ProgramBuilder) {
         let userConfigOverride = builder.options["roku-pm"] || {};
         // console.log("user defined config is " + JSON.stringify(userConfigOverride))
         this.config = Object.assign(this.getDefaultConfig(), userConfigOverride)
-        // console.log("final config is " + JSON.stringify(this.config))
+        this.isCustomFuncLogDefined = this.config.functionLogTemplate != this.getDefaultConfig().functionLogTemplate
     }
 
     beforeProgramTranspile(program, entries, editor) {
@@ -49,16 +51,30 @@ export class RokuPmPlugin implements CompilerPlugin {
                 let isMatch = micromatch.match(filename, filesToProcess).length > 0 && micromatch.not(filename, filesToIgnore).length === 0;
                 if (!isMatch) { continue }
 
-                let funcName = func.functionStatement?.getName(ParseMode.BrighterScript)
+                let funcName = func.functionStatement?.getName(ParseMode.BrighterScript);
+                let funcDeclLine = func.range.start.line + 1;
+                let funcLocation = `${filename}:${funcDeclLine}`;
                 if (funcName == undefined) {
                     if (this.config.logAnonFunc != true) { continue }
+                    let parent = func.parent
+                    let subName = ""
+                    console.log("annon func name "+parent?.constructor.name)
+                    if (isAAMemberExpression(parent)) {
+                        subName = parent.keyToken.text.replaceAll('"',"")
+                    } else if (isAssignmentStatement(parent)){
+                        subName = parent.name.text
+                    }
 
-                    let line = func.range.start.line + 1;
-                    funcName = `anon<${filename}:${line}>`;
+                    funcName = `${subName}::anon`
+                }
+
+                let needAdLocation = (this.config.logFuncLocation || (funcName === undefined && this.config.logAnonFuncLocation));
+                if ( !this.isCustomFuncLogDefined && needAdLocation) {
+                    funcLocation = "at " + funcLocation;
                 }
 
                 let parser = new Parser()
-                parser.parse(this.processStringTemplate(this.config.functionLogTemplate, { name: funcName }))
+                parser.parse(this.processStringTemplate(this.config.functionLogTemplate, {name: funcName, location: funcLocation}))
 
                 let insertIndex = 0
                 if (funcName.toLowerCase() === "new"){
@@ -81,8 +97,10 @@ export class RokuPmPlugin implements CompilerPlugin {
 
     private getDefaultConfig() {
         let config = {
-            "functionLogTemplate": '?">> ${name}()"',
+            "functionLogTemplate": '?">> ${name}() ${location}"',
             "logAnonFunc": true,
+            "logFuncLocation": true,
+            "logAnonFuncLocation": true,
             "addImports": [], // example: ["pkg:/source/someFile.brs"]
             "addFiles": [], // example: [{uri:"pkg:/source/someFile.brs", "file": "sub helloWorld \n ?\"hello world\" \n end sub"}]
             "files": ["**/*.*"] // to ignore some files/folders, add '!' to glob pattern "!some/folder/**"
