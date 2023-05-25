@@ -1,5 +1,5 @@
 ## how to add to project
-1. in `package.json` add `"roku-pm": "^1.0.2"` to `"devDependencies"`
+1. in `package.json` add `"roku-pm": "^1.0.3"` to `"devDependencies"`
 2. in `bsconfig.json` add `"roku-pm"` to `"plugins"` array, example  
 ```
 {   
