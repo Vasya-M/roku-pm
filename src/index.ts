@@ -1,4 +1,4 @@
-import { CompilerPlugin, ProgramBuilder, XmlFile, Program, BeforeFileTranspileEvent, isNamespaceStatement, isFunctionStatement, isFunctionType, isBrsFile, WalkMode, createVisitor, Parser, TokenKind, Body, NewExpression, ParseMode, isXmlFile } from 'brighterscript';
+import { CompilerPlugin, ProgramBuilder, ExpressionStatement,isCallExpression,isExpressionStatement, FunctionExpression,XmlFile, Program, BeforeFileTranspileEvent, isNamespaceStatement, isFunctionStatement, isFunctionType, isBrsFile, WalkMode, createVisitor, Parser, TokenKind, Body, NewExpression, ParseMode, isXmlFile, Position, CallExpression } from 'brighterscript';
 import { SGScript } from 'brighterscript/dist/parser/SGTypes';
 import * as micromatch from 'micromatch';
 
@@ -46,24 +46,35 @@ export class RokuPmPlugin implements CompilerPlugin {
 
             for (const func of event.file.parser.references.functionExpressions) {
                 let filename = event.file.pkgPath
-                let isMatch = micromatch.match(filename, filesToProcess).length > 0 && micromatch.not(filename, filesToIgnore).length === 0
+                let isMatch = micromatch.match(filename, filesToProcess).length > 0 && micromatch.not(filename, filesToIgnore).length === 0;
                 if (!isMatch) { continue }
 
                 let funcName = func.functionStatement?.getName(ParseMode.BrighterScript)
                 if (funcName == undefined) {
                     if (this.config.logAnonFunc != true) { continue }
 
-                    let line = func.range.start.line + 1
-                    funcName = `anon<${filename}:${line}>`
+                    let line = func.range.start.line + 1;
+                    funcName = `anon<${filename}:${line}>`;
                 }
 
                 let parser = new Parser()
                 parser.parse(this.processStringTemplate(this.config.functionLogTemplate, { name: funcName }))
 
-                event.editor.arrayUnshift(
-                    func.body.statements,
-                    ...parser.ast.statements
-                );
+                let insertIndex = 0
+                if (funcName.toLowerCase() === "new"){
+                    for (let index = 0; index < func.body.statements.length; index++) {
+                        const element = func.body.statements[index];
+                        if (isExpressionStatement(element)) {
+                            let child:CallExpression = element.findChild(isCallExpression)
+                            let name = child?.callee["name"]?.text
+                            if (name.toLowerCase() === "super"){
+                                insertIndex = index+1
+                                break;
+                            }
+                        }
+                    }
+                }
+                event.editor.arraySplice(func.body.statements, insertIndex, 0, ...parser.ast.statements)
             }
         }
     }
