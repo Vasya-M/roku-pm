@@ -1,6 +1,6 @@
 {
   "name": "roku-pm",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "allow to log all funciton calls(and more, soon) in roku project",
   "main": "dist/index.js",
   "scripts": {
